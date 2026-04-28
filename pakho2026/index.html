@@ -1,1 +1,134 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pakho Chau 2026</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+        body { font-family: 'Inter', -apple-system, sans-serif; background-color: #fff; color: #000; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .member-card { border: 1px solid #efefef; transition: all 0.3s ease; }
+        .station-img-container { overflow: hidden; border-radius: 24px; transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
+        .station-img-container:hover img { transform: scale(1.05); }
+        .btn-toggle { transition: all 0.2s; border: 1px solid #f0f0f0; }
+        .btn-active { background-color: #000 !important; color: #fff !important; border-color: #000 !important; transform: scale(1.05); }
+        /* 模拟 Readdy 的微妙过渡 */
+        .fade-enter-active, .fade-leave-active { transition: opacity 0.5s; }
+        .fade-enter-from, .fade-leave-to { opacity: 0; }
+    </style>
+</head>
+<body class="antialiased">
+    <div id="app" class="max-w-md mx-auto min-h-screen pb-24">
+        
+        <header class="px-8 pt-16 pb-8 flex justify-between items-end">
+            <div>
+                <h1 class="text-4xl font-black tracking-tighter uppercase leading-tight">
+                    Pakho Chau<br>
+                    <span class="text-gray-200">2026</span>
+                </h1>
+                <p class="text-[10px] tracking-[0.3em] font-bold text-gray-400 mt-2 uppercase">Attendance Center</p>
+            </div>
+            <button @click="handleAdmin" class="mb-1 text-[10px] font-bold border-b-2 border-black pb-1 hover:text-gray-400 hover:border-gray-400 transition-colors">
+                {{ isAdmin ? 'EXIT ADMIN' : 'ADMIN LOGIN' }}
+            </button>
+        </header>
 
+        <section class="px-8 mb-12">
+            <div class="flex gap-3 overflow-x-auto no-scrollbar py-2">
+                <div v-for="m in members" :key="m" class="flex-shrink-0 w-20 py-4 member-card rounded-3xl text-center">
+                    <div class="text-[9px] font-bold text-gray-300 uppercase mb-1">{{ m }}</div>
+                    <div class="text-xl font-black tracking-tighter">{{ getMemberTotal(m) }}</div>
+                </div>
+            </div>
+        </section>
+
+        <main class="px-8 space-y-14">
+            <div v-for="(station, sIndex) in stations" :key="sIndex" class="space-y-4">
+                <div class="station-img-container aspect-video shadow-sm bg-gray-50">
+                    <img :src="station.img" class="w-full h-full object-cover transition-transform duration-700">
+                </div>
+                
+                <div class="flex justify-between items-start pt-2">
+                    <div>
+                        <h2 class="text-2xl font-black tracking-tight">{{ station.name }}</h2>
+                        <p class="text-[11px] font-medium text-gray-400">{{ station.date }}</p>
+                    </div>
+                    <div class="bg-gray-50 px-3 py-1 rounded-full">
+                        <span class="text-[10px] font-black text-black">{{ station.attendees.length }} GOING</span>
+                    </div>
+                </div>
+
+                <div class="flex flex-wrap gap-2 pt-2">
+                    <button 
+                        v-for="m in members" 
+                        :key="m"
+                        @click="toggleAttendance(sIndex, m)"
+                        :disabled="!isAdmin"
+                        :class="station.attendees.includes(m) ? 'btn-active shadow-lg' : 'bg-white text-gray-300'"
+                        class="btn-toggle px-4 py-2 rounded-full text-[11px] font-bold">
+                        {{ m }}
+                    </button>
+                </div>
+            </div>
+        </main>
+
+        <footer class="mt-24 px-8 text-center">
+            <div class="h-[1px] w-full bg-gray-100 mb-8"></div>
+            <p class="text-[10px] text-gray-200 tracking-[0.5em] font-bold uppercase">Keep the memory alive</p>
+        </footer>
+    </div>
+
+    <script>
+        const { createApp } = Vue
+        createApp({
+            data() {
+                return {
+                    isAdmin: false,
+                    members: ['J', '大哥', '小9', '星球', '安安', '西瓜', '梨涡', '小蓝', '00'],
+                    stations: [
+                        { name: 'Shenzhen', date: 'JAN 16 - 18, 2026', attendees: [], img: 'https://images.unsplash.com/photo-1540039155733-5bb30b53aa14?w=800' },
+                        { name: 'Ganzhou', date: 'JAN 30 - FEB 01, 2026', attendees: [], img: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=800' },
+                        { name: 'Hong Kong', date: 'MAR 14 - 15, 2026', attendees: [], img: 'https://images.unsplash.com/photo-1514525253361-bee8718a74a2?w=800' },
+                        { name: 'Shanwei', date: 'MAY 30 - JUN 02, 2026', attendees: [], img: 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=800' }
+                    ]
+                }
+            },
+            mounted() {
+                const saved = localStorage.getItem('pakho_readdy_v5');
+                if (saved) this.stations = JSON.parse(saved);
+            },
+            methods: {
+                handleAdmin() {
+                    if (this.isAdmin) {
+                        this.isAdmin = false;
+                    } else {
+                        const pw = prompt('Password:');
+                        if (pw === '20251226') {
+                            this.isAdmin = true;
+                        } else {
+                            alert('Wrong Password');
+                        }
+                    }
+                },
+                toggleAttendance(sIndex, member) {
+                    if (!this.isAdmin) return;
+                    const list = this.stations[sIndex].attendees;
+                    const index = list.indexOf(member);
+                    if (index > -1) list.splice(index, 1);
+                    else list.push(member);
+                    this.save();
+                },
+                getMemberTotal(member) {
+                    return this.stations.filter(s => s.attendees.includes(member)).length;
+                },
+                save() {
+                    localStorage.setItem('pakho_readdy_v5', JSON.stringify(this.stations));
+                }
+            }
+        }).mount('#app')
+    </script>
+</body>
+</html>
